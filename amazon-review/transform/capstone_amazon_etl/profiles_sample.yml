@@ -1,0 +1,13 @@
+capstone_amazon_etl:
+  outputs:
+    dev:
+      account: ZGVFOTU-JZC04864
+      database: CAPSTONE_AMAZON_DB
+      password: XXXXX
+      role: ACCOUNTADMIN
+      schema: CAPSTONE_AMAZON_SCHEMA
+      threads: 1
+      type: snowflake
+      user: XXXXX 
+      warehouse: COMPUTE_WH
+  target: dev

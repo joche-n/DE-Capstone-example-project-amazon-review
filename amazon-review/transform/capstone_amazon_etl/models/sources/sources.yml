@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: capstone_amazon_raw
+    description: "Raw data sources for Amazon capstone project (reviews and metadata)"
+    database: CAPSTONE_AMAZON_DB
+    schema: CAPSTONE_AMAZON_SCHEMA
+
+    tables:
+      - name: capstone_amazon_review_raw_table
+        identifier: CAPSTONE_AMAZON_REVIEW_RAW_TABLE
+        description: >
+          Raw Amazon product review dataset. Contains review details such as
+          review text, rating, verified flag, timestamps, and reviewer metadata.
+
+        columns:
+          - name: asin
+            description: "Amazon Standard Identification Number — links reviews and metadata"
+            tests:
+              - not_null
+          - name: overall
+            description: "Numeric rating (1-5)"
+          - name: reviewTime
+            description: "Original review timestamp string (e.g., 'August 31, 2019')"
+          - name: unixReviewTime
+            description: "UNIX epoch timestamp (seconds)"
+          - name: reviewText
+            description: "Full text of the review"
+          - name: summary
+            description: "Review headline"
+          - name: reviewerID
+            description: "Unique reviewer identifier"
+          - name: reviewerName
+            description: "Name of the reviewer (if available)"
+          - name: verified
+            description: "Whether purchase was verified"
+          - name: review_date
+            description: "Normalized review date, if present"
+
+      - name: capstone_amazon_review_meta_raw_table
+        identifier: CAPSTONE_AMAZON_REVIEW_META_RAW_TABLE
+        description: >
+          Raw product metadata table containing ASIN, brand, category, title,
+          and pricing information. Used to enrich review data.
+        columns:
+          - name: asin
+            description: "ASIN used to join with review data"
+            tests:
+              - not_null
+          - name: brand
+            description: "Product brand name"
+          - name: title
+            description: "Product title"
+          - name: category
+            description: "Product category"
+          - name: price
+            description: "Product price information"

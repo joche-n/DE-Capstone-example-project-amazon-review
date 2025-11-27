@@ -1,0 +1,92 @@
+# ===============================
+# GLOBAL / SYSTEM IGNORE
+# ===============================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.bak
+*.lock
+~$*
+
+# ===============================
+# PYTHON ENVIRONMENT
+# ===============================
+# Virtual environments
+.venv/
+venv/
+.env
+ENV/
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+# Distribution / packaging
+build/
+dist/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# ===============================
+# TERRAFORM
+# ===============================
+# Local state files
+*.tfstate
+*.tfstate.*
+crash.log
+terraform.tfvars
+# Sensitive variable files
+*.auto.tfvars
+*.auto.tfvars.json
+# Terraform working directory
+.terraform/
+.terraform.lock.hcl
+# Plan output files
+plan.out
+
+# ===============================
+# DBT
+# ===============================
+# Compiled + Target directories
+dbt_modules/
+target/
+# Local dbt profiles (handled via secrets or CI)
+profiles.yml
+# Documentation artifacts
+manifest.json
+run_results.json
+catalog.json
+index.html
+
+# ===============================
+# IDE / EDITOR
+# ===============================
+# VS Code
+.vscode/
+# IntelliJ / PyCharm
+.idea/
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# ===============================
+# JUPYTER / NOTEBOOKS (if any)
+# ===============================
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# ===============================
+# MISC
+# ===============================
+# Temporary data files
+*.csv
+*.parquet
+*.zip
+*.gz
+*.snappy
+# Logs
+logs/
+# Local testing artifacts
+tmp/

@@ -1,0 +1,48 @@
+
+models:
+ -  name: stg_reviews
+    description: "Cleaned reviews table: typed fields, deduped, dates parsed."
+    columns:
+      - name: review_pk
+        description: "Surrogate primary key (md5 of asin|reviewer|date)"
+        tests:
+          - unique
+          - not_null
+      - name: asin
+        description: "Product ASIN (normalized uppercase)"
+        tests:
+          - not_null
+      - name: overall
+        description: "Rating (float 0..5)"
+        tests:
+          - not_null
+      - name: review_date
+        description: "Canonical review date (date)"
+        tests:
+          - not_null
+      - name: loaded_at
+        description: "When the row was loaded into the staging table"
+
+ -  name: stg_meta
+    description: "Cleaned product metadata: normalized ASIN, cleaned brand/title/category, parsed price, deduped."
+    columns:
+      - name: meta_pk
+        description: "Surrogate primary key (md5 of asin)."
+        tests:
+          - unique
+          - not_null
+      - name: asin
+        description: "Normalized ASIN (uppercase)."
+        tests:
+          - not_null
+      - name: brand
+        description: "Normalized brand name (may be NULL if not provided)."
+      - name: title
+        description: "Product title (cleaned)."
+      - name: category
+        description: "Product category (cleaned)."
+      - name: price_clean
+        description: "Numeric price parsed from raw price string (FLOAT)."
+      - name: price_currency
+        description: "Simple currency token extracted from the raw price string (if any)."
+
