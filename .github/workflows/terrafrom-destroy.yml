@@ -1,0 +1,98 @@
+name: "Terraform - Infra Destroy (Plan -> Apply Destroy + Upload Plan + Show Summary)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DESTROY to actually run the destroy (case-sensitive). Prevents accidental runs."
+        required: true
+        default: ""
+      auto_approve:
+        description: "If true, applies the destroy plan without additional prompts (default: true)."
+        required: false
+        default: "true"
+
+jobs:
+  destroy:
+    name: "Destroy Full Infrastructure"
+    runs-on: ubuntu-latest
+    concurrency:
+      group: infra-destroy-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "Fail if confirmation not provided"
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DESTROY" ]; then
+            echo "Confirmation token not provided or incorrect. To run, set the 'confirm' input to exactly: DESTROY"
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Export Snowflake credentials (TF_VAR_*)
+        run: |
+          echo "TF_VAR_snowflake_organization_name=${{ secrets.SNOWFLAKE_ORGANIZATION_NAME }}" >> $GITHUB_ENV
+          echo "TF_VAR_snowflake_account_name=${{ secrets.SNOWFLAKE_ACCOUNT_NAME }}" >> $GITHUB_ENV
+          echo "TF_VAR_snowflake_user=${{ secrets.SNOWFLAKE_USER }}" >> $GITHUB_ENV
+          echo "TF_VAR_snowflake_password=${{ secrets.SNOWFLAKE_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_snowflake_role=${{ secrets.SNOWFLAKE_ROLE }}" >> $GITHUB_ENV
+          echo "TF_VAR_snowflake_warehouse=${{ secrets.SNOWFLAKE_WAREHOUSE }}" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          echo "Initializing Terraform and reconfiguring backend..."
+          terraform init -input=false -reconfigure
+          echo "Backend init complete."
+
+      - name: Terraform Plan (destroy)
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          echo "Creating Terraform destroy plan (binary: tfplan, human-readable: plan.txt)..."
+          # create a destroy plan that can be applied exactly
+          terraform plan -destroy -input=false -out=tfplan
+          terraform show -no-color tfplan > plan.txt
+          echo "Destroy plan created."
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-destroy-plan-${{ github.run_id }}
+          path: |
+            infra/tfplan
+            infra/plan.txt
+
+      - name: Terraform Apply Destroy (apply the exact destroy plan)
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          echo "Applying Terraform destroy plan (tfplan)..."
+          # If user input auto_approve is "true" we proceed; otherwise we still run apply (non-interactive in CI)
+          terraform apply -auto-approve tfplan
+
+      - name: Show applied plan summary
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          echo "=== Terraform show (applied destroy plan) ==="
+          terraform show -no-color tfplan || echo "terraform show failed (plan may not exist)"
+
+      - name: Done
+        run: |
+          echo "Terraform destroy run complete. Destroy plan artifact uploaded and apply summary shown."
