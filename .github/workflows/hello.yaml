@@ -3,6 +3,8 @@ name: Hello World
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   hello:
