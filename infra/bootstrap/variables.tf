@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "tfstate_bucket_name" {
   description = "Globally unique bucket name for Terraform state"
   type        = string
-  default     = "capstone-amazon-state-bucket-<your-name>"
+  default     = "capstone-amazon-state-bucket-test-jochen"
 }
 
 variable "tfstate_dynamodb_table" {
