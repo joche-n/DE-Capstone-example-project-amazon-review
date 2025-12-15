@@ -27,7 +27,7 @@ variable "aws_profile" {
 variable "data_bucket_name" {
   description = "S3 bucket for raw/scripts/tmp"
   type        = string
-  default     = "capstone-amazon-project-bucket-<your-name>" # replace with your unique name
+  default     = "capstone-amazon-project-bucket-test-jochen-raw" # replace with your unique name
 }
 
 # SNS alert emails (optional)
