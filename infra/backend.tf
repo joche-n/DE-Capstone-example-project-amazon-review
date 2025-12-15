@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "capstone-amazon-state-bucket-<your-name>" # created in bootstrap
+    bucket         = "capstone-amazon-state-bucket-test-jochen" # created in bootstrap
     key            = "amazon-infra/dev/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "capstone-amazon-lock-table" # created in bootstrap
