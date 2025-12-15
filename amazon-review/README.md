@@ -68,7 +68,7 @@ After infrastructure setup, students will create a **data pipeline** to process 
 | **Download URL** | [https://nijianmo.github.io/amazon](https://nijianmo.github.io/amazon/#:~:text=Amazon%20Fashion,%28186%2C637%20products%29) |
 | **Format**       | JSON                                                                                                                        |
 | **Purpose**      | Analyze product performance and customer sentiment by brand and year                                                        |
-| **Frequency**    | Daily (new reviews periodically added)                                                                                      |
+| **Frequency**    | Dataset is Static                                                                                      |
 
 ---
 

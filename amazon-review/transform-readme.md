@@ -204,14 +204,23 @@ capstone_amazon:
 
 ## **Transformation Flow**
 
-1. **Glue → Snowflake:** Raw product/review JSON ingested via AWS Glue into `RAW_AMAZON` schema.
-2. **dbt sources:** Defined in `sources.yml` mapping raw Snowflake tables.
-3. **Staging models:** `stg_reviews`, `stg_meta` — flatten and clean review text, ratings, and metadata.
-4. **Mart model:** `mart_avg_rating_by_year_brand` — aggregates average product ratings by year and brand.
-5. **Testing:** Schema and data integrity checks via `dbt test`.
-6. **Docs:** `dbt docs generate` builds interactive lineage and documentation.
+1. **Glue → Snowflake:** Raw review/product JSON is ingested via AWS Glue into the `RAW_AMAZON` schema.
+2. **dbt Sources:** Defined in `sources.yml`, mapping raw Snowflake tables into dbt.
+3. **Staging Models:**
 
-**STG_REVIEW_TABLE**
+   * `stg_reviews` — performs parsing, normalization, deduplication, and **Slowly Changing Dimension Type-2 (SCD-2) history tracking** for all review attributes.
+   * `stg_meta` — standardizes product metadata.
+4. **SCD-2 Logic:**
+   The `stg_reviews` model maintains a full historical timeline of review changes using SCD-2 (surrogate keys, versioning, effective dates, and current-row tracking).
+   A dedicated documentation page explains the SCD-2 design, business keys, change-detection rules, and surrogate-id strategy. *(See: `scd2_reviews.md`)*
+5. **Mart Model:**
+   `mart_avg_rating_by_year_brand` — computes aggregated review metrics such as average ratings by year and brand.
+6. **Testing:**
+   Schema and data quality checks are enforced using `dbt test` to validate source contracts, data types, null-handling, and referential integrity.
+7. **Docs:**
+   `dbt docs generate` builds interactive lineage, model descriptions, and SCD-2 documentation links.
+
+**STG_REVIEW_TABLE** 
 
 ![stg_review_table](./assets/stg-review-table.png)
 

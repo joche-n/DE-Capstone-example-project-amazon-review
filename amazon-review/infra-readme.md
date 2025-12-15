@@ -88,7 +88,7 @@ Files:
 * `backend.tf` — defines local backend configuration for storing Terraform state.
 * `main.tf` — provisions S3 bucket, applies security and lifecycle settings, and creates DynamoDB lock table.
 * `outputs.tf` — exposes S3 bucket and DynamoDB table names and ARNs as outputs.
-* `variables.tf` — declares input variables for AWS region, state bucket name (unique), and DynamoDB table name.
+* `variables.tf` — declares input variables for AWS region, state bucket name **`(globally unique e.g. capstone-amazon-state-bucket-<your-name>)`**, and DynamoDB table name.
 
 Typical resources:
 
@@ -105,7 +105,7 @@ Inputs:
 | Name                     |     Type | Description                           |
 | ------------------------ | -------: | ------------------------------------- |
 | `aws_region`             | `string` | AWS region for backend resources      |
-| `tfstate_bucket_name`    | `string` | Bucket name for Terraform state       |
+| `tfstate_bucket_name`    | `string` | Bucket name should be `globally unique (capstone-amazon-state-bucket-<your-name>)` for Terraform state       |
 | `tfstate_dynamodb_table` | `string` | DynamoDB table name for state locking |
 
 Outputs:
@@ -428,7 +428,66 @@ module "iam" {
 ![iam-roles](./assets/Roles-IAM-Global.png)
 
 ---
+## [glue/](./infra/glue/)
 
+**Purpose:**
+Provision Glue ETL assets for the Capstone Amazon Review pipeline — upload ETL scripts to S3 and create two Glue jobs: a Python-shell **Download** job (fetch/unpack raw data) and a Glue Spark **Flatten** job (JSON → flattened Parquet). Exposes job names and script S3 paths for orchestration (Step Functions).
+
+---
+
+## Files
+
+* `glue.tf` — `aws_s3_object` (script uploads) + `aws_glue_job` (download + flatten).
+* `variables.tf` — module inputs.
+* `output.tf` — job names and script S3 paths.
+* `scripts/` — `Capstone-Amazon-Review-Dataset-Download-Job.py`, `Capstone-Amazon-Review-Flatten-Job.py`.
+
+---
+
+## Provisioned resources
+
+* `aws_s3_object.download_script` — upload download script to `s3://<bucket>/scripts/...`.
+* `aws_s3_object.flatten_script` — upload flatten script to S3.
+* `aws_glue_job.download` — Python shell job (download/unzip).
+* `aws_glue_job.flatten` — Glue Spark ETL job (flatten → parquet).
+
+---
+
+## Inputs (key)
+
+| Name                        |   Type | Default                                       | Notes                            |
+| --------------------------- | -----: | --------------------------------------------- | -------------------------------- |
+| `bucket_name`               | string | *(req)*                                       | S3 bucket for scripts & data     |
+| `glue_role_arn`             | string | *(req)*                                       | IAM role ARN (from `iam` module) |
+| `download_job_name`         | string | `Capstone-Amazon-Review-Dataset-Download-Job` | Python Shell job name            |
+| `flatten_job_name`          | string | `Capstone-Amazon-Review-Flatten-Job`          | Spark ETL job name               |
+| `python_shell_glue_version` | string | `3.0`                                         | Python shell Glue version        |
+| `glue_version`              | string | `3.0`                                         | Glue Spark runtime version       |
+| `download_max_capacity`     | number | `0.0625`                                      | Python shell capacity (DPU)      |
+| `flatten_worker_type`       | string | `G.1X`                                        | Spark worker type                |
+| `flatten_number_of_workers` | number | `2`                                           | Spark workers                    |
+| `input_prefix`              | string | `raw`                                         | S3 raw prefix                    |
+| `review_json_key`           | string | `reviews/AMAZON_FASHION.json`                 | Raw reviews key                  |
+| `meta_json_key`             | string | `meta/meta_AMAZON_FASHION.json`               | Raw meta key                     |
+| `review_output_prefix`      | string | `flattened/reviews`                           | Output prefix                    |
+| `meta_output_prefix`        | string | `flattened/meta`                              | Output prefix                    |
+| `output_format`             | string | `parquet`                                     | Output format                    |
+| `compression`               | string | `snappy`                                      | Compression                      |
+| `coalesce`                  | number | `1`                                           | Partition coalesce               |
+| `fail_on_error`             |   bool | `true`                                        | Fail job on parse/schema errors  |
+
+---
+
+## Outputs
+
+| Name                      | Value                                                                  |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `download_job_name`       | Glue download job name                                                 |
+| `flatten_job_name`        | Glue flatten job name                                                  |
+| `download_script_s3_path` | `s3://<bucket>/scripts/Capstone-Amazon-Review-Dataset-Download-Job.py` |
+| `flatten_script_s3_path`  | `s3://<bucket>/scripts/Capstone-Amazon-Review-Flatten-Job.py`          |
+
+---
 ## [sns](./infra/sns/)
 
 **Purpose:**
@@ -921,8 +980,8 @@ Orchestrate all Terraform submodules to provision the full Capstone Amazon Revie
 | `project`                     |       `string` | `"capstone_amazon"`                | Naming/tag prefix.                          |
 | `env`                         |       `string` | `"dev"`                            | Environment.                                |
 | `aws_region`                  |       `string` | `"us-east-1"`                      | AWS region.                                 |
-| `data_bucket_name`            |       `string` | `"capstone-amazon-project-bucket"` | Primary S3 bucket (must be unique).         |
-| `alert_emails`                | `list(string)` | `["preciselyqa@gmail.com"]`        | SNS email subscribers (confirm required).   |
+| `data_bucket_name`            |       `string` | `"capstone-amazon-project-bucket-<your-name>"` | **`Primary S3 bucket (must be globally unique).`**         |
+| `alert_emails`                | `list(string)` | `["<your-email-address>@gmail.com"]`        | SNS email subscribers (confirm required).   |
 | `snowflake_organization_name` |       `string` | `""`                               | Snowflake org (supply via secure vars).     |
 | `snowflake_account_name`      |       `string` | `""`                               | Snowflake account/locator.                  |
 | `snowflake_user`              |       `string` | `""`                               | Snowflake user for Terraform.               |
@@ -935,7 +994,7 @@ Orchestrate all Terraform submodules to provision the full Capstone Amazon Revie
 ## Backend (remote state)
 
 * **Type:** `s3`
-* **Bucket:** `capstone-amazon-state-bucket` (created via bootstrap)
+* **Bucket:** `(capstone-amazon-state-bucket-<your-name>` (created via bootstrap)
 * **Key:** `amazon-infra/dev/terraform.tfstate`
 * **Region:** `us-east-1`
 * **DynamoDB:** `capstone-amazon-lock-table` (state locking)

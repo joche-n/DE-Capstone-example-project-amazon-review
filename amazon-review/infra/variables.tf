@@ -27,14 +27,14 @@ variable "aws_profile" {
 variable "data_bucket_name" {
   description = "S3 bucket for raw/scripts/tmp"
   type        = string
-  default     = "capstone-amazon-project-bucket" # replace with your unique name
+  default     = "capstone-amazon-project-bucket-<your-name>" # replace with your unique name
 }
 
 # SNS alert emails (optional)
 variable "alert_emails" {
   description = "List of email addresses to subscribe to alerts (confirm required)"
   type        = list(string)
-  default     = ["preciselyqa@gmail.com"]
+  default     = ["<your-email-address>@gmail.com"]
 }
 
 # Snowflake provider & module inputs (supply these via TF_VAR_* or terraform.tfvars / CI secrets)

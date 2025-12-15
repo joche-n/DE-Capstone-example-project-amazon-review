@@ -9,29 +9,9 @@ All provisioning and orchestration are automated through **GitHub Actions CI** u
 
 Before triggering any workflow:
 
-### **1.1 Dataset — Amazon Fashion Reviews**
-
-Download both **Review** and **Metadata** JSON files for *Amazon Fashion* from the official Amazon Review Data repository:
-
-🔗 [https://nijianmo.github.io/amazon](https://nijianmo.github.io/amazon/#:~:text=Amazon%20Fashion,%28186%2C637%20products%29)
-
-| File                          | Description                                     |
-| ----------------------------- | ----------------------------------------------- |
-| `AMAZON_FASHION.json.gz`      | Customer reviews for fashion products           |
-| `meta_AMAZON_FASHION.json.gz` | Product metadata (brand, title, features, etc.) |
-
-After downloading:
-
-1. Extract (`.gz`) files locally
-2. Upload them to your Terraform-created S3 bucket under:
-
-```
-s3://capstone-amazon-project-bucket/raw/
-```
-
 ---
 
-### **1.2 AWS IAM User / Role**
+### **1.1 AWS IAM User / Role**
 
 Used by **GitHub Actions** for Terraform automation.
 
@@ -48,7 +28,7 @@ Used by **GitHub Actions** for Terraform automation.
 
 ---
 
-### **1.3 Snowflake Account**
+### **1.2 Snowflake Account**
 
 A **Snowflake trial or developer account** is required for data storage and dbt transformations.
 
@@ -62,6 +42,28 @@ Add these credentials as GitHub Secrets:
 | `SNOWFLAKE_PASSWORD`          | `MySecurePass123` |
 | `SNOWFLAKE_ROLE`              | `ACCOUNTADMIN`    |
 | `SNOWFLAKE_WAREHOUSE`         | `CAPSTONE_WH`     |
+
+---
+
+### 1.3 Define a Globally Unique Bucket Name (Prerequisite)
+
+Before deploying the infrastructure, you must define a globally unique S3 bucket name that will store:
+
+- Terraform State file
+- Raw Amazon review data
+- Flattened/processed outputs
+- Glue ETL scripts
+- Temporary/intermediate artifacts
+
+S3 bucket names must be unique across all AWS accounts and regions, and follow DNS-compliant naming rules.
+
+**Where to update.**
+
+| Terraform File                        | Variable name     |
+| ----------------------------- | ----------------- |
+| **[bootstrap](./infra/bootstrap/variables.tf)** | `tfstate_bucket_name`           |
+| **[backend](./infra/backend.tf)**      | `backend "s3"` should same that created via bootstrap        |
+| **[variables](./infra/variables.tf)**              | `data_bucket_name`   |
 
 ---
 
@@ -104,19 +106,19 @@ Example execution payload:
     {
       "name": "capstone_amazon-download-job",
       "arguments": {
-        "--SOURCE": "s3://capstone-amazon-project-bucket/raw/",
+        "--SOURCE": "s3://capstone-amazon-project-bucket-<your-name>/raw/",
         "--CATEGORY": "Amazon Fashion",
         "--TYPE": "review",
-        "--TempDir": "s3://capstone-amazon-project-bucket/temp/"
+        "--TempDir": "s3://capstone-amazon-project-bucket-<your-name>/temp/"
       }
     },
     {
       "name": "capstone_amazon-flatten-job",
       "arguments": {
-        "--INPUT_PATH": "s3://capstone-amazon-project-bucket/raw/",
-        "--OUTPUT_PATH": "s3://capstone-amazon-project-bucket/flattened/",
+        "--INPUT_PATH": "s3://capstone-amazon-project-bucket-<your-name>/raw/",
+        "--OUTPUT_PATH": "s3://capstone-amazon-project-bucket-<your-name>/flattened/",
         "--CATEGORY": "Amazon Fashion",
-        "--TempDir": "s3://capstone-amazon-project-bucket/temp/"
+        "--TempDir": "s3://capstone-amazon-project-bucket-<your-name>/temp/"
       }
     }
   ],
@@ -146,7 +148,7 @@ CREATE OR REPLACE FILE FORMAT CAPSTONE_AMAZON_PARQUET_REVIEW_FORMAT
   COMMENT = 'Parquet file format for Capstone raw flattened reviews';
 
 CREATE OR REPLACE STAGE CAPSTONE_AMAZON_REVIEW_RAW_STAGE
-  URL = 's3://capstone-amazon-project-bucket/raw/flattened/reviews/'
+  URL = 's3://capstone-amazon-project-bucket-<your-name>/flattened/reviews/'
   STORAGE_INTEGRATION = "capstone_amazon_snowflake_s3_integration"
   FILE_FORMAT = CAPSTONE_AMAZON_PARQUET_REVIEW_FORMAT;
 
@@ -179,7 +181,7 @@ CREATE OR REPLACE FILE FORMAT CAPSTONE_AMAZON_PARQUET_REVIEW_META_FORMAT
   COMMENT = 'Parquet file format for Capstone raw flattened meta';
 
 CREATE OR REPLACE STAGE CAPSTONE_AMAZON_REVIEW_META_RAW_STAGE
-  URL = 's3://capstone-amazon-project-bucket/flattened/meta/'
+  URL = 's3://capstone-amazon-project-bucket-<your-name>/flattened/meta/'
   STORAGE_INTEGRATION = "capstone_amazon_snowflake_s3_integration"
   FILE_FORMAT = CAPSTONE_AMAZON_PARQUET_REVIEW_META_FORMAT;
 
@@ -292,7 +294,7 @@ An interactive dashboard showing the **Top 10 brands by average rating** for the
 1. **Prepare prerequisites:**
 
    * Download **Amazon Fashion review and meta** JSON files
-   * Upload to `s3://capstone-amazon-project-bucket/raw/`
+   * Upload to `s3://capstone-amazon-project-bucket-<your-name>/raw/`
    * Ensure AWS + Snowflake secrets are set
 
 2. **In GitHub Actions:**

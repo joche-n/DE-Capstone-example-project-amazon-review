@@ -3,11 +3,11 @@ capstone_amazon_etl:
     dev:
       account: ZGVFOTU-JZC04864
       database: CAPSTONE_AMAZON_DB
-      password: XXXXX
+      password: Capstone1234567890
       role: ACCOUNTADMIN
       schema: CAPSTONE_AMAZON_SCHEMA
       threads: 1
       type: snowflake
-      user: XXXXX 
+      user: vijay
       warehouse: COMPUTE_WH
   target: dev
