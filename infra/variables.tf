@@ -34,7 +34,7 @@ variable "data_bucket_name" {
 variable "alert_emails" {
   description = "List of email addresses to subscribe to alerts (confirm required)"
   type        = list(string)
-  default     = ["<your-email-address>@gmail.com"]
+  default     = ["jochen.ruess@neuefische.de"]
 }
 
 # Snowflake provider & module inputs (supply these via TF_VAR_* or terraform.tfvars / CI secrets)
