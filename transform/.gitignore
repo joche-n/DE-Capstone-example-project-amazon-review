@@ -90,3 +90,6 @@ index.html
 logs/
 # Local testing artifacts
 tmp/
+Amazon_Fashion.jsonl
+meta_Amazon_Fashion.jsonl
+dbt-env/

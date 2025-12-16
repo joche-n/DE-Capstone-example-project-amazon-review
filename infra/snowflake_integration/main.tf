@@ -18,7 +18,8 @@ data "aws_iam_policy_document" "s3_read" {
   statement {
     sid       = "AllowListBucket"
     effect    = "Allow"
-    actions   = ["s3:ListBucket", "s3:GetBucketLocation"]
+    actions   = ["s3:ListBucket", "s3:GetBucketLocation","s3:GetObjectVersion",
+                "s3:GetObject"]
     resources = ["arn:aws:s3:::${var.s3_bucket}"]
 
     condition {
@@ -31,7 +32,8 @@ data "aws_iam_policy_document" "s3_read" {
   statement {
     sid       = "AllowGetObjects"
     effect    = "Allow"
-    actions   = ["s3:GetObject", "s3:GetObjectVersion"]
+    actions   = ["s3:ListBucket", "s3:GetBucketLocation","s3:GetObjectVersion",
+                "s3:GetObject"]
     resources = ["arn:aws:s3:::${var.s3_bucket}/${var.s3_prefix}*"]
   }
 }
